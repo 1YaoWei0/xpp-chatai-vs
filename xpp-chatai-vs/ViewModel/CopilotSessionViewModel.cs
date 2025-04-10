@@ -8,8 +8,12 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using xpp_chatai_vs.Command;
-using xpp_chatai_vs.Model;
 using System.Linq;
+using xpp_chatai_vs.Utilities;
+using System.Diagnostics;
+using xpp_chatai_vs.View;
+using System.Windows.Forms;
+using System.Drawing;
 
 namespace xpp_chatai_vs.ViewModel
 {
@@ -36,16 +40,128 @@ namespace xpp_chatai_vs.ViewModel
             get => _currentSession;
             set 
             {
+                if (value == null) return;
+
                 _currentSession = value;
+                OnSessionChanged(value);
                 OnPropertyChanged();
             }
         }
 
         public ICommand AddNewSessionCommand => new RelayCommand(AddNewSessionAsync);
 
+        public ICommand RemoveSessionCommand => new RelayCommand(RemoveCurrentSessionAsync);
+
+        public ICommand RenameSessionNameCommand => new RelayCommand(OpenRenameDialogAsync);
+
+        /// <summary>
+        /// Add new session on ai chat
+        /// Willie Yao - 04.10/2025
+        /// </summary>
         private async void AddNewSessionAsync()
         {
-            Console.WriteLine("Trigger!");
+            int messageCount = CurrentSession.Messages.Count;
+            var existBlankSession = ValidateExistBlankSession();
+
+            if (messageCount <= 0 || existBlankSession)
+            {
+                return;
+            }
+
+            var newChatViewModel = CopilotSessionUtility.CreateChatViewModel(Sessions.Count + 1);
+
+            Sessions.Add(newChatViewModel);
+
+            CurrentSession = CopilotSessionUtility.GetLastCopilotChatViewModel(Sessions);
+        }
+
+        /// <summary>
+        /// Remove current session on ai chat
+        /// Willie Yao - 04/10/2025
+        /// </summary>
+        private async void RemoveCurrentSessionAsync()
+        {
+            int sessionsCount = Sessions.Count;            
+
+            if (sessionsCount <= 1)
+            {
+                Sessions.Clear();
+
+                Sessions.Add(CopilotSessionUtility.CreateChatViewModel());
+            }
+            else
+            {
+                Guid sessionId = CurrentSession.Metadata.SessionId;
+
+                var currentSession = CopilotSessionUtility.GetCopilotChatViewModel(Sessions, sessionId);
+
+                Sessions.Remove(currentSession);
+            }
+
+            CopilotChatViewModel lastSession = CopilotSessionUtility.GetLastCopilotChatViewModel(Sessions);
+
+            CurrentSession = lastSession;
+        }
+
+        /// <summary>
+        /// This is a dialog for accepting the new session name.
+        /// Willie Yao - 04/10/2025
+        /// </summary>
+        private async void OpenRenameDialogAsync()
+        {
+            using (var inputDialog = new Form())
+            {                
+                inputDialog.StartPosition = FormStartPosition.CenterParent; 
+                inputDialog.ShowInTaskbar = false; 
+
+                inputDialog.Text = "New Name";
+                inputDialog.ClientSize = new Size(300, 120);
+                inputDialog.FormBorderStyle = FormBorderStyle.FixedDialog;
+
+                var txtInput = new TextBox
+                {
+                    Location = new Point(20, 20),
+                    Width = 260
+                };
+
+                var btnOK = new Button
+                {
+                    Text = "Ok",
+                    DialogResult = DialogResult.OK,
+                    Location = new Point(120, 60)
+                };
+
+                var btnCancel = new Button
+                {
+                    Text = "Cancel",
+                    DialogResult = DialogResult.Cancel,
+                    Location = new Point(200, 60)
+                };
+
+                inputDialog.Controls.Add(txtInput);
+                inputDialog.Controls.Add(btnOK);
+                inputDialog.Controls.Add(btnCancel);
+                inputDialog.AcceptButton = btnOK;
+                inputDialog.CancelButton = btnCancel;
+
+                if (inputDialog.ShowDialog() == DialogResult.OK)
+                {
+                    if (!string.IsNullOrWhiteSpace(txtInput.Text))
+                    {
+                        CurrentSession.Metadata.SessionName = txtInput.Text;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Extend logic when session changed.
+        /// Willie Yao - 04/10/2025
+        /// </summary>
+        /// <param name="newSession">New session</param>
+        private void OnSessionChanged(CopilotChatViewModel newSession)
+        { 
+            newSession.Metadata.LastActiveTime = DateTime.Now;
         }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
@@ -55,50 +171,85 @@ namespace xpp_chatai_vs.ViewModel
 
         public CopilotSessionViewModel()
         {
-            LoadSessionsAsync().ConfigureAwait(false);
+            
         }
 
+        private bool ValidateExistBlankSession()
+        {
+            foreach (var chatViewModel in Sessions)
+            {
+                if (!chatViewModel.Messages.Any())
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Load session when the visual studio opened.
+        /// Willie Yao - 04/10/2025
+        /// </summary>
+        /// <returns>Task</returns>
         public async Task LoadSessionsAsync()
         {
-            var path = GetStoragePath();
-            if (File.Exists(path))
+            try
             {
-                var json = File.ReadAllText(path);
-                var sessions = JsonConvert.DeserializeObject<List<CopilotChatViewModel>>(json);
-                Sessions.Clear();
-                if (sessions.Count == 0)
+                var path = CopilotSessionUtility.GetStoragePath();
+
+                if (File.Exists(path))
                 {
-                    Sessions.Add(new CopilotChatViewModel() { Metadata = new ChatSessionMeta() });
+                    var sessions = JsonConvert.DeserializeObject<List<CopilotChatViewModel>>(File.ReadAllText(path));
+
+                    Sessions.Clear();
+
+                    if (sessions.Count <= 0)
+                    {
+                        Sessions.Add(CopilotSessionUtility.CreateChatViewModel());
+                    }
+                    else
+                    {
+                        foreach (var session in sessions)
+                            Sessions.Add(session);
+                    }
                 }
                 else
                 {
-                    foreach (var session in sessions)
-                    {
-                        Sessions.Add(session);
-                    }
-                }                    
+                    Sessions.Add(CopilotSessionUtility.CreateChatViewModel());
+                }
+
+                await SwitchToLastSessionAsync();
             }
-            else
+            catch (JsonException ex)
             {
-                await this.SaveAllSessionsAsync();
+                Debug.WriteLine($"JSON parsing failed: {ex.Message}");
+                Sessions.Clear();
+                Sessions.Add(CopilotSessionUtility.CreateChatViewModel());
             }
-            CurrentSession = Sessions.Last();
+            catch (IOException ex)
+            {
+                Debug.WriteLine($"File operation failure: {ex.Message}");
+                Sessions.Clear();
+                Sessions.Add(CopilotSessionUtility.CreateChatViewModel());
+            }            
         }
 
-        public async Task SaveAllSessionsAsync()
+        /// <summary>
+        /// Switch to last session
+        /// Willie Yao - 04/10/2025
+        /// </summary>
+        /// <returns>Task</returns>
+        public async Task SwitchToLastSessionAsync()
         {
-            var path = GetStoragePath();
-            var json = JsonConvert.SerializeObject(Sessions);
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
-            File.WriteAllText(path, json);
-        }
+            CopilotChatViewModel lastSession = CopilotSessionUtility.GetLastCopilotChatViewModel(Sessions);
 
-        private static string GetStoragePath()
-        {
-            return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "XppChatAiVs",
-                "sessions.json");
+            if (lastSession == null) 
+            {
+                lastSession = CopilotSessionUtility.CreateChatViewModel();
+            }
+
+            CurrentSession = lastSession;
         }
     }
 }

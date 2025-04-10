@@ -6,6 +6,7 @@ using System.Management.Instrumentation;
 using System.Runtime.InteropServices;
 using System.Threading;
 using xpp_chatai_vs.Command;
+using xpp_chatai_vs.Utilities;
 using xpp_chatai_vs.View;
 using xpp_chatai_vs.ViewModel;
 using Task = System.Threading.Tasks.Task;
@@ -77,9 +78,15 @@ namespace xpp_chatai_vs
             await CopilotWindowCommand.InitializeAsync(this);            
         }
 
+        /// <summary>
+        /// Release resource after closing visual studio, 
+        /// uninstalling or disable extension package
+        /// Willie Yao - 04/10/2025
+        /// </summary>
+        /// <param name="disposing">Disposing</param>
         protected override void Dispose(bool disposing)
         {
-            // TODO: ???
+            _ = CopilotSessionUtility.SaveSessionsAsync(CopilotSessionViewModel.Sessions);
         }
 
         public override IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType)
