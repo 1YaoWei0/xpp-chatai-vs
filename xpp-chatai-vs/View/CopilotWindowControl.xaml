@@ -15,6 +15,8 @@
     <UserControl.Resources>
         <local:AlignmentConverter x:Key="AlignmentConverter" />
         <local:ForegroundConverter x:Key="ForegroundConverter" />
+        <local:BackgroundConverter x:Key="BackgroundConverter" />
+        <local:PercentageConverter x:Key="PercentageConverter" />
         <!--<ResourceDictionary>
             <viewModel:CopilotSessionViewModel x:Key="session" />
         </ResourceDictionary>-->
@@ -32,19 +34,75 @@
                     <ColumnDefinition Width="8*"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <ListBox ItemsSource="{Binding Sessions}"
-                         SelectedItem="{Binding CurrentSession}"
-                         Grid.Column="0">
-                    <ListBox.ItemTemplate>
+                <ComboBox ItemsSource="{Binding Sessions}"
+                          SelectedItem="{Binding CurrentSession, Mode=TwoWay}"
+                          Grid.Column="0"
+                          Margin="5"
+                          HorizontalAlignment="Stretch">
+
+                    <ComboBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding CurrentSession.Metadata.SessionName}"></TextBlock>
+                            <TextBlock Text="{Binding Metadata.SessionName}" 
+                                       Padding="3" 
+                                       Foreground="Black"/>
                         </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-                <Button Grid.Column="1" Command="{Binding AddNewSessionCommand}">+</Button>
-                <Button Grid.Column="2">-</Button>
+                    </ComboBox.ItemTemplate>
+
+                    <ComboBox.Template>
+                        <ControlTemplate TargetType="ComboBox">
+                            <Grid>
+                                <!-- Define two rows in the Grid -->
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Place ToggleButton in the first row -->
+                                <ToggleButton Name="Toggle"
+                                              Focusable="True"
+                                              Background="#F8F9FA"
+                                              BorderBrush="#CED4DA"
+                                              BorderThickness="1"
+                                              IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                                              Panel.ZIndex="0"
+                                              Grid.Row="0"/>
+
+                                <!-- Place ContentPresenter in the second row -->
+                                <ContentPresenter Name="ContentSite"
+                                                  IsHitTestVisible="False"
+                                                  Content="{Binding Path=SelectedItem.Metadata.SessionName, RelativeSource={RelativeSource TemplatedParent}}"
+                                                  Margin="3,3,23,3"
+                                                  VerticalAlignment="Center"
+                                                  HorizontalAlignment="Center"
+                                                  Panel.ZIndex="1"
+                                                  Grid.Row="1"/>
+
+                                <Popup Name="Popup"
+                                       Placement="Bottom"
+                                       IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                                       PlacementTarget="{Binding ElementName=Toggle}"
+                                       HorizontalOffset="-1">
+                                    <Border Name="DropDownBorder"
+                                            Width="{Binding ActualWidth, ElementName=Toggle}"
+                                            MaxHeight="300"
+                                            Background="White"
+                                            BorderThickness="1"
+                                            CornerRadius="2">
+                                        <ScrollViewer>
+                                            <ItemsPresenter />
+                                        </ScrollViewer>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                        </ControlTemplate>
+                    </ComboBox.Template>
+                </ComboBox>
+                <Button Grid.Column="1" Command="{Binding RenameSessionNameCommand}">Rename</Button>
+                <Button Grid.Column="2" Command="{Binding AddNewSessionCommand}">+</Button>
+                <Button Grid.Column="3" Command="{Binding RemoveSessionCommand}">-</Button>
             </Grid>            
         </Border>
 
@@ -63,8 +121,9 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <Border Padding="10"
+                                    Background="{Binding MessageType, Converter={StaticResource BackgroundConverter}}"
                                     HorizontalAlignment="{Binding MessageType, Converter={StaticResource AlignmentConverter}}"
-                                    MaxWidth="200"
+                                    MaxWidth="{Binding ActualWidth, ElementName=MessagesScrollViewer, Converter={StaticResource PercentageConverter}, ConverterParameter=0.85}"
                                     CornerRadius="10">
                                 <mdxam:MarkdownScrollViewer 
                                     VerticalScrollBarVisibility="Hidden"

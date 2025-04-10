@@ -1,13 +1,9 @@
-﻿using Microsoft.VisualStudio.Shell;
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
+﻿using System;
 using System.Globalization;
-using System.Linq;
-using System.Runtime.Remoting.Contexts;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Media;
 using xpp_chatai_vs.Model;
 using xpp_chatai_vs.ViewModel;
 
@@ -31,26 +27,7 @@ namespace xpp_chatai_vs.View
 
             _sessionManager = CopilotWindowPackage.Instance.CopilotSessionViewModel;
 
-            // this.RestoreLastSession();
-
             this.DataContext = _sessionManager;
-        }
-
-        private void RestoreLastSession()
-        {
-            if (_sessionManager.Sessions.Any())
-            {
-                _sessionManager.CurrentSession = _sessionManager.Sessions.Last();
-            }
-            else
-            {
-                // Set a default current session
-
-                _sessionManager.CurrentSession = new CopilotChatViewModel() 
-                {
-                    Metadata = new ChatSessionMeta()
-                };
-            }
         }
     }
 
@@ -80,10 +57,44 @@ namespace xpp_chatai_vs.View
 
             if (messageType == MessageType.UserInput)
             {
-                return Brushes.White;
+                return System.Windows.Media.Brushes.White;
             }
 
-            return Brushes.Black;
+            return System.Windows.Media.Brushes.Black;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+    }
+
+    public class PercentageConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is double width && parameter is string percentageStr &&
+                double.TryParse(percentageStr, NumberStyles.Any, culture, out double percentage))
+            {
+                return width * percentage;
+            }
+            return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+    }
+
+    public class BackgroundConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            MessageType messageType = (MessageType)value;
+
+            if (messageType == MessageType.UserInput)
+            {
+                return new SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 120, 215));
+            }
+
+            return new SolidColorBrush(Colors.White);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

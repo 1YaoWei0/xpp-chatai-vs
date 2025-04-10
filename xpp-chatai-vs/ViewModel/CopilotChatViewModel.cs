@@ -12,7 +12,12 @@ namespace xpp_chatai_vs.ViewModel
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public ChatSessionMeta Metadata { get; set; }
+        private ChatSessionMeta _metaData;
+        public ChatSessionMeta Metadata
+        {
+            get => _metaData;
+            set => SetField(ref _metaData, value);
+        }
 
         private string _inputText;
         public string InputText
@@ -38,7 +43,11 @@ namespace xpp_chatai_vs.ViewModel
 
             Messages.Add(userMessage);
 
+            InputText = string.Empty;
+
             var responseMessage = new ChatMessage() { Content = "Test response", MessageType = MessageType.AIResponse };
+
+            Messages.Add(responseMessage);
         }
 
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
