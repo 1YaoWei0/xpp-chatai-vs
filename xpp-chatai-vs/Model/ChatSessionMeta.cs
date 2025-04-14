@@ -4,6 +4,10 @@ using System.Runtime.CompilerServices;
 
 namespace xpp_chatai_vs.Model
 {
+    /// <summary>
+    /// Chat session meta class
+    /// Willie Yao - 04/14/2025
+    /// </summary>
     public class ChatSessionMeta : INotifyPropertyChanged
     {
         public Guid SessionId { get; } = Guid.NewGuid();

@@ -8,27 +8,32 @@ namespace xpp_chatai_vs.Command
 {
     /// <summary>
     /// Command handler
+    /// Willie Yao - 04/14/2025
     /// </summary>
     internal sealed class CopilotWindowCommand
     {
         /// <summary>
         /// Command ID.
+        /// Willie Yao - 04/14/2025
         /// </summary>
         public const int CommandId = 0x0100;
 
         /// <summary>
         /// Command menu group (command set GUID).
+        /// Willie Yao - 04/14/2025
         /// </summary>
         public static readonly Guid CommandSet = new Guid("7e218f19-0efe-4745-8444-a332370604dd");
 
         /// <summary>
         /// VS Package that provides this command, not null.
+        /// Willie Yao - 04/14/2025
         /// </summary>
         private readonly AsyncPackage package;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CopilotWindowCommand"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
+        /// Willie Yao - 04/14/2025
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
         /// <param name="commandService">Command service to add command to, not null.</param>
@@ -44,6 +49,7 @@ namespace xpp_chatai_vs.Command
 
         /// <summary>
         /// Gets the instance of the command.
+        /// Willie Yao - 04/14/2025
         /// </summary>
         public static CopilotWindowCommand Instance
         {
@@ -53,6 +59,7 @@ namespace xpp_chatai_vs.Command
 
         /// <summary>
         /// Gets the service provider from the owner package.
+        /// Willie Yao - 04/14/2025
         /// </summary>
         private Microsoft.VisualStudio.Shell.IAsyncServiceProvider ServiceProvider
         {
@@ -64,6 +71,7 @@ namespace xpp_chatai_vs.Command
 
         /// <summary>
         /// Initializes the singleton instance of the command.
+        /// Willie Yao - 04/14/2025
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
         public static async Task InitializeAsync(AsyncPackage package)
@@ -78,6 +86,7 @@ namespace xpp_chatai_vs.Command
 
         /// <summary>
         /// Shows the tool window when the menu item is clicked.
+        /// Willie Yao - 04/14/2025
         /// </summary>
         /// <param name="sender">The event sender.</param>
         /// <param name="e">The event args.</param>

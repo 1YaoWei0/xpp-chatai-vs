@@ -14,9 +14,14 @@ using xpp_chatai_vs.Model;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using xpp_chatai_vs.Service;
 
 namespace xpp_chatai_vs.ViewModel
 {
+    /// <summary>
+    /// Copilot chat view model class for copilot chat form
+    /// Willie Yao - 04/14/2025
+    /// </summary>
     public class CopilotChatViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -42,21 +47,25 @@ namespace xpp_chatai_vs.ViewModel
             set => SetField(ref _messages, value);
         }
 
+        private ChatMessage _currentAssistantMessage;
+
         public ICommand SendCommand => new RelayCommand(SendMessageAsync);
 
+        /// <summary>
+        /// Send message commend
+        /// Willie Yao - 04/14/2025
+        /// </summary>
         private async void SendMessageAsync()
         {
             if (string.IsNullOrWhiteSpace(InputText)) return;
 
             var userMessage = new ChatMessage() { Content = InputText, MessageType = MessageType.UserInput };
 
-            var assistantMessage = new ChatMessage() { Content = "", MessageType = MessageType.UserInput };
-
             Messages.Add(userMessage);
 
             InputText = string.Empty;
 
-            await GetAIResponse(assistantMessage);
+            await GetAIResponse();
         }
 
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
@@ -77,38 +86,56 @@ namespace xpp_chatai_vs.ViewModel
 
         }
 
-        private async Task GetAIResponse(ChatMessage assistantMessage)
+        /// <summary>
+        /// Get ai response
+        /// Willie Yao - 04/14/2025
+        /// </summary>
+        /// <returns>Task</returns>
+        private async Task GetAIResponse()
         {
             try
             {
-                var requestBody = new
+                var model = Option.Instance.CompletionModel;
+
+                HttpResponseMessage responseMessage = new HttpResponseMessage();
+
+                switch (model)
                 {
-                    messages = BuildMessageHistory(),
-                    model = "deepseek-chat",
-                    stream = true,
-                    temperature = 1,
-                    max_tokens = 2048
-                };
+                    case Base.CompletionModel.Deepseek:
+                        DskAIHttpClient dskAIHttpClient = new DskAIHttpClient(BuildMessageHistory(), "deepseek-chat", 1, 2048);
+                        responseMessage = await dskAIHttpClient.PostAsync("https://api.deepseek.com/chat/completions");
+                        break;
+                    case Base.CompletionModel.XppAssistant:
+                        XppAssistantHttpClient xppAssistant = new XppAssistantHttpClient(BuildMessageHistory(), "", 1, 2048);
+                        responseMessage = await xppAssistant.PostAsync("https://ai.huameisoft.cn/api/v1/chat/completions");
+                        break;
+                }
 
-                var json = JsonConvert.SerializeObject(requestBody);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                await ProcessStreamResponseAsync(responseMessage);
+            }
+            catch (NullReferenceException ex)
+            {
+                var nullErrorResponse = new ChatMessage() { Content = "Please check the model or api key!", MessageType = MessageType.SystemAlert };
 
-                var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "sk-613975d20507407399cb67b54a313504");
-
-                var response = await httpClient.PostAsync("https://api.deepseek.com/chat/completions", content);
-                await ProcessStreamResponseAsync(response, assistantMessage);
+                Messages.Add(nullErrorResponse);
             }
             catch (Exception ex)
             {
-                
-            }
+                var errorResponse = new ChatMessage() { Content = "Connection error!", MessageType = MessageType.SystemAlert };
+
+                Messages.Add(errorResponse);
+            }            
             finally
             {
                 
             }
         }
 
+        /// <summary>
+        /// Build message history
+        /// Willie Yao - 04/14/2025
+        /// </summary>
+        /// <returns>List<dynamic></returns>
         private List<dynamic> BuildMessageHistory()
         {
             var messages = new List<dynamic>();
@@ -125,7 +152,13 @@ namespace xpp_chatai_vs.ViewModel
             return messages;
         }
 
-        private async Task ProcessStreamResponseAsync(HttpResponseMessage response, ChatMessage assistantMessage)
+        /// <summary>
+        /// Process stream response
+        /// Willie Yao - 04/14/2025
+        /// </summary>
+        /// <param name="response">HttpResponseMessage</param>
+        /// <returns>Task</returns>
+        private async Task ProcessStreamResponseAsync(HttpResponseMessage response)
         {
             using (var stream = await response.Content.ReadAsStreamAsync())
             using (var reader = new StreamReader(stream))
@@ -152,18 +185,31 @@ namespace xpp_chatai_vs.ViewModel
                         string dataLine = buffer.ToString().Substring(dataStart, dataEnd - dataStart);
                         buffer.Remove(0, dataEnd + 2);
 
-                        ProcessSingleDataLine(dataLine, assistantMessage);
+                        await ProcessSingleDataLine(dataLine);
                     }
                 }
+
+                // await _currentAssistantMessage.FlushContentAsync();
+                _currentAssistantMessage = null;
             }
         }
 
-        private void ProcessSingleDataLine(string dataLine, ChatMessage assistantMessage)
+        /// <summary>
+        /// Process single data line
+        /// Willie Yao - 04/14/2025
+        /// </summary>
+        /// <param name="dataLine"></param>
+        /// <returns></returns>
+        private async Task ProcessSingleDataLine(string dataLine)
         {
             if (!dataLine.StartsWith("data: ")) return;
 
             var json = dataLine.Substring("data: ".Length);
-            if (json == "[DONE]") return;
+            if (json == "[DONE]")
+            {
+                _currentAssistantMessage = null; // 重置状态
+                return;
+            }
 
             try
             {
@@ -172,28 +218,51 @@ namespace xpp_chatai_vs.ViewModel
 
                 if (!string.IsNullOrEmpty(content))
                 {
-                    Application.Current.Dispatcher.Invoke(() =>
+                    Application.Current.Dispatcher.Invoke(async () =>
                     {
-                        var responseMessage = new ChatMessage() { Content = content, MessageType = MessageType.AIResponse };
-                        Messages.Add(responseMessage);
+                        if (_currentAssistantMessage == null)
+                        {
+                            _currentAssistantMessage = new ChatMessage()
+                            {
+                                Content = content,
+                                MessageType = MessageType.AIResponse
+                            };
+                            Messages.Add(_currentAssistantMessage);
+                        }
+                        else
+                        {
+                            await _currentAssistantMessage.AppendContentAsync(content);
+                        }
                     });
                 }
             }
             catch (JsonException) { }
         }
 
+        /// <summary>
+        /// Response chunk
+        /// Willie Yao - 04/14/2025
+        /// </summary>
         public class ResponseChunk
         {
             [JsonProperty("choices")]
             public List<StreamChoice> Choices { get; set; }
         }
 
+        /// <summary>
+        /// Stream choice
+        /// Willie Yao - 04/14/2025
+        /// </summary>
         public class StreamChoice
         {
             [JsonProperty("delta")]
             public StreamDelta Delta { get; set; }
         }
 
+        /// <summary>
+        /// Steam delta
+        /// Willie Yao - 04/14/2025
+        /// </summary>
         public class StreamDelta
         {
             [JsonProperty("content")]
