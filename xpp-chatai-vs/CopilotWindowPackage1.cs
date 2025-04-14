@@ -24,7 +24,7 @@ namespace xpp_chatai_vs
         public const string guidPackageGroupSetString = "f4a087a7-38ca-4274-a721-dabd07d80721";
         public static Guid guidPackageGroupSet = new Guid(guidPackageGroupSetString);
 
-        public const string guidImagesString = "68e5f899-56c5-4d16-bf9e-d1f6966191bb";
+        public const string guidImagesString = "58856b32-8191-4f75-9aed-a3f6a3c8dce4";
         public static Guid guidImages = new Guid(guidImagesString);
     }
     /// <summary>
@@ -33,6 +33,7 @@ namespace xpp_chatai_vs
     internal sealed partial class PackageIds
     {
         public const int CopilotWindowCommandId = 0x0100;
+        public const int KnowledgeBaseWindowCommandId = 0x0104;
         public const int Menu = 0x0101;
         public const int Group = 0x0102;
         public const int SecGroup = 0x0103;

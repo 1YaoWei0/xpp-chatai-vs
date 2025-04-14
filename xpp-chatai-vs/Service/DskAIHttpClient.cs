@@ -77,5 +77,10 @@ namespace xpp_chatai_vs.Service
 
             return _httpClient.PostAsync(baseUrl, content);
         }
+
+        public Task<HttpResponseMessage> GETAsync(string requestUrl)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

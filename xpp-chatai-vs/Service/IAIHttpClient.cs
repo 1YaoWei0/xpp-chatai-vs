@@ -6,5 +6,7 @@ namespace xpp_chatai_vs.Service
     public interface IAIHttpClient
     {
         Task<HttpResponseMessage> PostAsync(string baseUrl);
+
+        Task<HttpResponseMessage> GETAsync(string requestUrl);
     }
 }
