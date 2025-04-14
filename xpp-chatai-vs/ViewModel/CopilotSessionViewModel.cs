@@ -17,6 +17,10 @@ using System.Drawing;
 
 namespace xpp_chatai_vs.ViewModel
 {
+    /// <summary>
+    /// Copilot session view model class
+    /// Willie Yao - 04/14/2025
+    /// </summary>
     public class CopilotSessionViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -174,6 +178,11 @@ namespace xpp_chatai_vs.ViewModel
             
         }
 
+        /// <summary>
+        /// Validate exists blank session
+        /// Willie Yao - 04/14/2025
+        /// </summary>
+        /// <returns>True if exists</returns>
         private bool ValidateExistBlankSession()
         {
             foreach (var chatViewModel in Sessions)

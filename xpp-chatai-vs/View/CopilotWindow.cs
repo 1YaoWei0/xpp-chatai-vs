@@ -6,6 +6,7 @@ namespace xpp_chatai_vs.View
 {
     /// <summary>
     /// This class implements the tool window exposed by this package and hosts a user control.
+    /// Willie Yao - 04/14/2025
     /// </summary>
     /// <remarks>
     /// In Visual Studio tool windows are composed of a frame (implemented by the shell) and a pane,
@@ -20,6 +21,7 @@ namespace xpp_chatai_vs.View
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="CopilotWindow"/> class.
+        /// Willie Yao - 04/14/2025
         /// </summary>
         public CopilotWindow() : base(null)
         {

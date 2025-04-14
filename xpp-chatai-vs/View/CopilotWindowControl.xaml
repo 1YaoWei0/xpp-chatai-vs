@@ -112,8 +112,14 @@
             </Grid>            
         </Border>
 
-        <ScrollViewer Grid.Row="1" x:Name="MessagesScrollViewer" VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding CurrentSession.Messages}" HorizontalAlignment="Stretch">
+        <ScrollViewer Grid.Row="1" 
+                      x:Name="MessagesScrollViewer" 
+                      VerticalScrollBarVisibility="Auto"
+                      IsDeferredScrollingEnabled="False"
+                      CanContentScroll="False">
+            <ItemsControl ItemsSource="{Binding CurrentSession.Messages}" 
+                          HorizontalAlignment="Stretch"
+                          VirtualizingPanel.ScrollUnit="Pixel">
                 <ItemsControl.ItemContainerStyle>
                     <Style TargetType="ContentPresenter">
                         <Setter Property="HorizontalAlignment" Value="Stretch"/>

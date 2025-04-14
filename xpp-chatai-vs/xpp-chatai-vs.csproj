@@ -56,6 +56,10 @@
     <Compile Include="Model\ChatMessage.cs" />
     <Compile Include="Model\ChatSessionMeta.cs" />
     <Compile Include="Options\Option.cs" />
+    <Compile Include="Service\AIHttpClientFactory.cs" />
+    <Compile Include="Service\DskAIHttpClient.cs" />
+    <Compile Include="Service\IAIHttpClient.cs" />
+    <Compile Include="Service\XppAssistantHttpClient.cs" />
     <Compile Include="Utilities\CopilotSessionUtility.cs" />
     <Compile Include="ViewModel\CopilotChatViewModel.cs" />
     <Compile Include="ViewModel\CopilotSessionViewModel.cs" />

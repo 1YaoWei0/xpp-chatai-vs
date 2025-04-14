@@ -1,11 +1,19 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace xpp_chatai_vs.Model
 {
+    /// <summary>
+    /// Message type
+    /// Willie Yao - 04/14/2025
+    /// </summary>
     public enum MessageType
     {
         UserInput,
@@ -14,6 +22,10 @@ namespace xpp_chatai_vs.Model
         CodeSnippet
     }
 
+    /// <summary>
+    /// Chat message model
+    /// Willie Yao - 04/14/2025
+    /// </summary>
     public class ChatMessage : INotifyPropertyChanged
     {                      
         private string _content;
@@ -38,30 +50,81 @@ namespace xpp_chatai_vs.Model
 
         private readonly StringBuilder _renderBuffer = new StringBuilder();
 
+        private Stopwatch _renderStopwatch = new Stopwatch();
+
+        private SemaphoreSlim _renderLock = new SemaphoreSlim(1, 1);
+
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public void AppendContent(string text)
+        /// <summary>
+        /// Appent stream content async
+        /// Willie Yao - 04/14/2025
+        /// </summary>
+        /// <param name="text">Content</param>
+        /// <param name="ct">CancellationToken</param>
+        /// <returns>Task</returns>
+        public async Task AppendContentAsync(string text, CancellationToken ct = default)
         {
-            lock (_renderBuffer)
+            await _renderLock.WaitAsync(ct);
+
+            try
             {
                 _renderBuffer.Append(text);
 
-                if (DateTime.Now - _timestamp > TimeSpan.FromMilliseconds(30) ||
-                    _renderBuffer.Length >= 5)
+                var elapsedMs = _renderStopwatch.ElapsedMilliseconds;
+                var requiredDelay = Math.Max(20 - (int)elapsedMs, 0);
+
+                if (_renderStopwatch.IsRunning)
+                    await Task.Delay(requiredDelay, ct);
+
+                _renderStopwatch.Restart();
+
+                while (_renderBuffer.Length > 0)
                 {
-                    string flushContent = _renderBuffer.ToString();
-                    _renderBuffer.Clear();
+                    var takeCount = Math.Min(3, _renderBuffer.Length);
+                    var segment = _renderBuffer.ToString(0, takeCount);
+                    _renderBuffer.Remove(0, takeCount);
 
-                    Application.Current.Dispatcher.Invoke(() =>
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
-                        Content += flushContent;
-                    });
+                        Content += segment;
+                    }, DispatcherPriority.Background, ct);
 
-                    _timestamp = DateTime.Now;
+                    if (takeCount < 3)
+                        break;
                 }
+            }
+            finally
+            {
+                _renderLock.Release();
+            }
+        }
+
+        /// <summary>
+        /// Flush content async
+        /// Willie Yao - 04/14/2025
+        /// </summary>
+        /// <returns>Task</returns>
+        public async Task FlushContentAsync()
+        {
+            await _renderLock.WaitAsync();
+            try
+            {
+                //if (_renderBuffer.Length > 0)
+                //{
+                //    await Application.Current.Dispatcher.InvokeAsync(() =>
+                //    {
+                //        Content += _renderBuffer.ToString();
+                //        _renderBuffer.Clear();
+                //    }, DispatcherPriority.Background);
+                //}
+            }
+            finally
+            {
+                _renderLock.Release();
             }
         }
     }

@@ -12,11 +12,13 @@ namespace xpp_chatai_vs.Command
     {
         /// <summary>
         /// The <see cref="Action"/> to invoke when <see cref="Execute"/> is used.
+        /// Willie Yao - 04/14/2025
         /// </summary>
         private readonly Action execute;
 
         /// <summary>
         /// The optional action to invoke when <see cref="CanExecute"/> is used.
+        /// Willie Yao - 04/14/2025
         /// </summary>
         private readonly Func<bool> canExecute;
 
@@ -25,6 +27,7 @@ namespace xpp_chatai_vs.Command
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RelayCommand"/> class that can always execute.
+        /// Willie Yao - 04/14/2025
         /// </summary>
         /// <param name="execute">The execution logic.</param>
         /// <exception cref="System.ArgumentNullException">Thrown if <paramref name="execute"/> is <see langword="null"/>.</exception>
@@ -37,6 +40,7 @@ namespace xpp_chatai_vs.Command
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RelayCommand"/> class.
+        /// Willie Yao - 04/14/2025
         /// </summary>
         /// <param name="execute">The execution logic.</param>
         /// <param name="canExecute">The execution status logic.</param>

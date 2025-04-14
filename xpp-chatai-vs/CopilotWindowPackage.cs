@@ -2,7 +2,6 @@
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Management.Instrumentation;
 using System.Runtime.InteropServices;
 using System.Threading;
 using xpp_chatai_vs.Command;
@@ -15,6 +14,7 @@ namespace xpp_chatai_vs
 {
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
+    /// Willie Yao - 04/14/2025
     /// </summary>
     /// <remarks>
     /// <para>
@@ -50,6 +50,7 @@ namespace xpp_chatai_vs
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CopilotWindowPackage"/> class.
+        /// Willie Yao - 04/14/2025
         /// </summary>
         public CopilotWindowPackage()
         {
@@ -64,6 +65,7 @@ namespace xpp_chatai_vs
         /// <summary>
         /// Initialization of the package; this method is called right after the package is sited, so this is the place
         /// where you can put all the initialization code that rely on services provided by VisualStudio.
+        /// Willie Yao - 04/14/2025
         /// </summary>
         /// <param name="cancellationToken">A cancellation token to monitor for initialization cancellation, which can occur when VS is shutting down.</param>
         /// <param name="progress">A provider for progress updates.</param>
