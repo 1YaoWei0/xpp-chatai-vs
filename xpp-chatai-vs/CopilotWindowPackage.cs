@@ -34,9 +34,10 @@ namespace xpp_chatai_vs
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideToolWindow(typeof(CopilotWindow))]
+    [ProvideToolWindow(typeof(xpp_chatai_vs.View.KnowledgeBaseWindow))]
     [ProvideOptionPage(typeof(OptionsProvider.OptionOptions), "Xpp ChatAI Options", "General", 0, 0, true, SupportsProfiles = true)]
     [Guid(CopilotWindowPackage.PackageGuidString)]
-    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]  
     public sealed class CopilotWindowPackage : AsyncPackage
     {
         /// <summary>
@@ -47,6 +48,8 @@ namespace xpp_chatai_vs
         internal static CopilotWindowPackage Instance { get; private set; }
 
         public CopilotSessionViewModel CopilotSessionViewModel { get; } = new CopilotSessionViewModel();
+
+        public KnowledgeBaseViewModel KnowledgeBaseViewModel { get; } = new KnowledgeBaseViewModel();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CopilotWindowPackage"/> class.
@@ -74,10 +77,13 @@ namespace xpp_chatai_vs
         {
             Instance = this;
             await CopilotSessionViewModel.LoadSessionsAsync();
+            // KnowledgeBaseViewModel.LoadDataAsync();
+
             // When initialized asynchronously, the current thread may be a background thread at this point.
             // Do any initialization that requires the UI thread after switching to the UI thread.
             await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             await CopilotWindowCommand.InitializeAsync(this);            
+            await KnowledgeBaseWindowCommand.InitializeAsync(this);
         }
 
         /// <summary>

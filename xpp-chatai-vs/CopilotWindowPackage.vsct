@@ -15,10 +15,10 @@
         defining some of the constants that we will use inside the file. -->
 
   <!--This is the file that defines the IDs for all the commands exposed by VisualStudio. -->
-  <Extern href="stdidcmd.h"/>
+  <Extern href="stdidcmd.h" />
 
   <!--This header contains the command ids for the menus provided by the shell. -->
-  <Extern href="vsshlids.h"/>
+  <Extern href="vsshlids.h" />
 
   <!--The Commands section is where commands, menus, and menu groups are defined.
       This section uses a Guid to identify the package that provides the command defined inside it. -->
@@ -59,10 +59,17 @@
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node /> -->
       <Button guid="guidCopilotWindowPackageCmdSet" id="CopilotWindowCommandId" priority="0x0100" type="Button">
-        <Parent guid="guidPackageGroupSet" id="SecGroup"/>
+        <Parent guid="guidPackageGroupSet" id="SecGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
         <Strings>
           <ButtonText>Copilot</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidCopilotWindowPackageCmdSet" id="KnowledgeBaseWindowCommandId" priority="0x0104" type="Button">
+        <Parent guid="guidPackageGroupSet" id="SecGroup" />
+        <Icon guid="guidImages" id="bmpPic1" />
+        <Strings>
+          <ButtonText>Knowledge Base Configuration</ButtonText>
         </Strings>
       </Button>
     </Buttons>
@@ -74,7 +81,7 @@
             bitmap strip containing the bitmaps and then there are the numeric ids of the elements used
             inside a button definition. An important aspect of this declaration is that the element id
             must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
-      <Bitmap guid="guidImages" href="Resources\CopilotWindowCommand.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough"/>
+      <Bitmap guid="guidImages" href="Resources\CopilotWindowCommand.png" usedList="bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, bmpPicStrikethrough" />
     </Bitmaps>
   </Commands>
 
@@ -85,6 +92,7 @@
     <!-- This is the guid used to group the menu commands together -->
     <GuidSymbol name="guidCopilotWindowPackageCmdSet" value="{7e218f19-0efe-4745-8444-a332370604dd}">
       <IDSymbol name="CopilotWindowCommandId" value="0x0100" />
+      <IDSymbol name="KnowledgeBaseWindowCommandId" value="0x0104" />
     </GuidSymbol>
 
 	<GuidSymbol name="guidPackageMenuSet" value="{1041a140-1cb6-44a5-9704-25bd0f8508ca}">
@@ -95,8 +103,8 @@
 	  <IDSymbol name="Group" value="0x0102" />
 	  <IDSymbol name="SecGroup" value="0x0103" />
 	</GuidSymbol>
-
-    <GuidSymbol name="guidImages" value="{68e5f899-56c5-4d16-bf9e-d1f6966191bb}" >
+  
+    <GuidSymbol value="{58856b32-8191-4f75-9aed-a3f6a3c8dce4}" name="guidImages">
       <IDSymbol name="bmpPic1" value="1" />
       <IDSymbol name="bmpPic2" value="2" />
       <IDSymbol name="bmpPicSearch" value="3" />
